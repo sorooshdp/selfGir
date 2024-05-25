@@ -6,22 +6,21 @@ const users = {
     mahan: { userName: "1400012137020", pass: "0150329075" },
     aryan: { userName: "1401012137052", pass: "2581513381" },
     amirreza: { userName: "1400012137028", pass: "9119012218" },
-    sina: { userName:"1402121320020", pass:"6660590978"},
+    sina: { userName: "1402121320020", pass: "6660590978" },
 };
 
 async function typeIntoInput(page, selector, text) {
     await page.waitForSelector(selector);
-    await page.click(selector, { delay: 100 });
-    await page.type(selector, text, { delay: 100 });
+    await page.click(selector, { delay: 20 });
+    await page.type(selector, text, { delay: 20 });
 }
 
 async function reserveFood(user, num) {
     let refreshCount = 0;
-
     try {
         const browser = await puppeteer.launch({
-            headless: false,
-            args: ["--window-size=1920,1080"],
+            headless: false, // Set to false if you need to see the browser
+            args: ["--window-size=1920,1080", "--disable-infobars", "--disable-extensions"],
             defaultViewport: {
                 width: 1530,
                 height: 800,
@@ -34,10 +33,8 @@ async function reserveFood(user, num) {
         if (pages.length > 1) {
             await pages[0].close();
         }
-
-        // Navigate to the food reservation site
         await page.goto("https://samad.app/login");
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 4000));
 
         await page.click(".input-btn-edit");
 
@@ -55,9 +52,6 @@ async function reserveFood(user, num) {
 
         console.log("uni selected");
 
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Fill in the username and password fields
         await typeIntoInput(page, 'input[name="username"]', user.userName);
         await typeIntoInput(page, 'input[name="password"]', user.pass);
 
@@ -66,9 +60,13 @@ async function reserveFood(user, num) {
         await page.click("button.auth-btn");
         console.log(`${user.userName} logged in`);
 
-        // await page.waitForSelector("button.app-button-nurture");
-        // await page.click("button.app-button-nurture");
-        // console.log("Entered student interface");
+        try {
+            await page.waitForSelector("button.app-button-nurture");
+            await page.click("button.app-button-nurture");
+            console.log("Entered student interface");
+        } catch (e) {
+            console.error(e);
+        }
 
         await page.waitForSelector("button.app-button-glass");
         await page.click("button.app-button-glass");
@@ -89,7 +87,7 @@ async function reserveFood(user, num) {
         await page.select("#selectself_selfListId", "1");
         await page.click('input[value="تایید و ادامه"]');
         console.log("self is selected");
-        // Continuously refresh the page until an option is available
+
         let optionReserved = false;
         let optionAvailable = false;
 
@@ -102,7 +100,7 @@ async function reserveFood(user, num) {
             // Wait for the reservation section to be present before evaluating
             try {
                 await new Promise((resolve) => setTimeout(resolve, 2000));
-                // Check if an option is available
+
                 optionAvailable = await page.evaluate((select) => {
                     const reservationSection = document.getElementById(
                         `buyFreeFoodIconSpanuserWeekReserves.selected${select}`
@@ -118,10 +116,26 @@ async function reserveFood(user, num) {
                         ).firstElementChild;
                         reservationSection.click();
 
-                        const submit = document.getElementById("doReservBtn");
-                        submit.click();
+                        document.getElementById("doReservBtn").click;
                     }, num);
                 } else {
+                    // await page.evaluate(async (num) => {
+                    //     const response = await fetch(window.location.href, {
+                    //         method: "GET",
+                    //         headers: {
+                    //             "Content-Type": "text/html",
+                    //         },
+                    //     });
+                    //     const text = await response.text();
+                    //     const parser = new DOMParser();
+                    //     const doc = parser.parseFromString(text, "text/html");
+                    //     const newReservations = doc.getElementById(`buyFreeFoodIconSpanuserWeekReserves.selected${num}`);
+                    //     if (newReservations) {
+                    //         document.getElementById(`buyFreeFoodIconSpanuserWeekReserves.selected${num}`).innerHTML = newReservations.innerHTML;
+                    //     } else {
+                    //         console.log("no update!");
+                    //     }
+                    // }, num);
                     refreshCount++;
                     console.log(`refreshing for ${user.userName} count: ${refreshCount}`);
                     await page.reload();
